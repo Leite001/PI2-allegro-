@@ -1,0 +1,272 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_image.h>
+
+#define LARGURA 900
+#define ALTURA 500
+
+#define VELOCIDADE 4.0
+
+int main(void)
+{
+
+    if (!al_init()) {
+        printf("Erro ao inicializar Allegro!\n");
+        return 1;
+    }
+
+    if (!al_install_keyboard()) {
+        printf("Erro ao inicializar teclado!\n");
+        return 1;
+    }
+
+
+    if (!al_init_image_addon()) {
+        printf("Erro ao inicializar imagens!\n");
+        return 1;
+    }
+
+
+
+    // aki, eu estou criando a janela
+
+    ALLEGRO_DISPLAY* janela =
+        al_create_display(LARGURA, ALTURA);
+
+    if (!janela) {
+        printf("Erro ao criar janela!\n");
+        return 1;
+    }
+
+
+
+
+
+
+
+	ALLEGRO_BITMAP* fundo =
+		al_load_bitmap("./Imagem_de_fundo.jpeg");
+
+
+    ALLEGRO_BITMAP* sprite =
+        al_load_bitmap("./skeleton-idle2.png");
+
+    if (!sprite) {
+        printf("Erro ao carregar skeleton-idle2.png!\n");
+        al_destroy_display(janela);
+        return 1;
+    }
+
+
+
+    // fila de eventos
+
+    ALLEGRO_EVENT_QUEUE* fila =
+        al_create_event_queue();
+
+    al_register_event_source(
+        fila,
+        al_get_keyboard_event_source()
+    );
+
+    al_register_event_source(
+        fila,
+        al_get_display_event_source(janela)
+    );
+
+    // posição q eu vou começar no jogo
+
+    float jogador_x = LARGURA/2;
+    float jogador_y = ALTURA/2;
+
+
+
+
+    //usar sprite de andar
+    int quantidade_frames = 12;
+
+    int largura_sprite =
+        al_get_bitmap_width(sprite) / quantidade_frames;
+
+    int altura_sprite =
+        al_get_bitmap_height(sprite);
+
+    // Frame atual
+    int frame = 0;
+
+    // Controle da animação
+    float contador_animacao = 0;
+
+
+
+
+    bool teclas[ALLEGRO_KEY_MAX] = { false };
+
+    bool rodando = true;
+
+
+
+    while (rodando) {
+
+        ALLEGRO_EVENT evento;
+
+        while (al_get_next_event(fila, &evento)) {
+
+            if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+                rodando = false;
+            }
+
+
+            // p usar o teclado
+            if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
+
+                teclas[evento.keyboard.keycode] = true;
+
+                if (evento.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+                    rodando = false;
+                }
+            }
+
+
+            if (evento.type == ALLEGRO_EVENT_KEY_UP) {
+
+                teclas[evento.keyboard.keycode] = false;
+            }
+        }
+
+
+
+
+
+
+
+        bool andando = false;
+
+        if (teclas[ALLEGRO_KEY_W] ||
+            teclas[ALLEGRO_KEY_UP]) {
+
+            jogador_y -= VELOCIDADE;
+            andando = true;
+        }
+
+        if (teclas[ALLEGRO_KEY_S] ||
+            teclas[ALLEGRO_KEY_DOWN]) {
+
+            jogador_y += VELOCIDADE;
+            andando = true;
+        }
+
+        if (teclas[ALLEGRO_KEY_A] ||
+            teclas[ALLEGRO_KEY_LEFT]) {
+
+            jogador_x -= VELOCIDADE;
+            andando = true;
+        }
+
+        if (teclas[ALLEGRO_KEY_D] ||
+            teclas[ALLEGRO_KEY_RIGHT]) {
+
+            jogador_x += VELOCIDADE;
+            andando = true;
+        }
+
+        // limitador da telaa
+
+
+        if (jogador_x < 0)
+            jogador_x = 0;
+
+        if (jogador_y < 0)
+            jogador_y = 0;
+
+        if (jogador_x > LARGURA - 100)
+            jogador_x = LARGURA - 100;
+
+        if (jogador_y > ALTURA - 100)
+            jogador_y = ALTURA - 100;
+
+
+
+
+
+
+        if (andando) {
+
+            contador_animacao += 0.2;
+
+            if (contador_animacao >= 1) {
+
+                frame++;
+
+                if (frame >= quantidade_frames) {
+                    frame = 0;
+                }
+
+                contador_animacao = 0;
+            }
+
+        }
+        else {
+
+            // parado = primeiro frame
+            frame = 0;
+        }
+
+
+
+
+
+        al_clear_to_color(
+            al_map_rgb(30, 30, 30)
+        );
+		al_draw_scaled_bitmap(
+			fundo,
+			0, 0,
+			al_get_bitmap_width(fundo),
+			al_get_bitmap_height(fundo),
+			0, 0,
+			LARGURA, ALTURA,
+			0
+		);
+        // Coordenada X do frame dentro da sprite sheet
+        int origem_x = frame * largura_sprite;
+
+        // Desenha apenas UM frame
+        al_draw_bitmap_region(
+            sprite,
+
+            origem_x,
+            0,
+
+            largura_sprite,
+            altura_sprite,
+
+            jogador_x,
+            jogador_y,
+
+            0
+        );
+		
+
+        al_flip_display();
+
+        al_rest(0.01);
+    }
+
+
+
+
+
+
+    //finalz
+	al_destroy_bitmap(fundo);
+    al_destroy_bitmap(sprite);
+    al_destroy_event_queue(fila);
+    al_destroy_display(janela);
+
+    al_shutdown_image_addon();
+
+    return 0;
+}
