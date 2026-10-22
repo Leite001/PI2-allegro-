@@ -1,0 +1,120 @@
+#include<stdio.h>
+#include<allegro5/allegro.h>
+#include<allegro5/allegro_primitives.h>
+#include<stdbool.h>
+#include<allegro5/keyboard.h>
+#include<allegro5/mouse.h>
+
+
+
+
+int main() {
+
+	al_init();
+	al_init_primitives_addon();
+	al_install_keyboard();
+	al_install_mouse();
+
+	int altura_tela = 500;
+	int largura_tela = 860;
+	ALLEGRO_DISPLAY* display = al_create_display(largura_tela, altura_tela);
+	al_set_window_position(display, 200, 200);
+
+	float xi = 400.0f;
+	float xf = 450.0f;
+	float yi = 320.0f;
+	float yf = 400.0f;
+	float velocidade = 0.03f;
+	float velobala = 0.05f;
+	float balaX;
+	float balaY;
+	float velobala = 5.0f;
+
+	bool balaAtiva = false;
+
+	ALLEGRO_KEYBOARD_STATE teclado;
+	ALLEGRO_MOUSE_STATE mouse;
+	bool mouseAnterior = false;
+
+	while (true) {
+		al_get_keyboard_state(&teclado);
+		al_get_mouse_state(&mouse);	
+
+		// Movimentação para a esquerda
+		if (al_key_down(&teclado, ALLEGRO_KEY_LEFT)) {
+			xi -= velocidade;
+			xf -= velocidade;
+		}
+
+		// Movimentação para a direita
+		if (al_key_down(&teclado, ALLEGRO_KEY_RIGHT)) {
+			xi += velocidade;
+			xf += velocidade;
+		}
+
+		// Impede que o personagem saia da tela
+		if (xi < 0) {
+			xi = 0;
+			xf = 50;
+		}
+
+		if (xf > largura_tela) {
+			xf = largura_tela;
+			xi = largura_tela - 50;
+		}
+
+		al_get_mouse_state(&mouse);
+
+		bool mouseAtual =
+			al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT);
+
+		if (mouseAtual && !mouseAnterior && !balaAtiva) {
+			balaX = xf;
+			balaY = yi + (yf - yi) / 2;
+			balaAtiva = true;
+		}
+
+		mouseAnterior = mouseAtual;
+
+		if (balaAtiva) {
+			balaX += velobala;
+
+			al_draw_filled_rectangle(
+				balaX,
+				balaY - 5,
+				balaX + 20,
+				balaY + 5,
+				al_map_rgb(0, 255, 0)
+			);
+
+			if (balaX > largura_tela) {
+				balaAtiva = false;
+			}
+		}
+
+
+
+		al_clear_to_color(al_map_rgb(194, 191, 29));
+
+		al_draw_filled_rectangle(xi, yi, xf, yf, al_map_rgb(255, 0, 0));
+		al_draw_filled_rectangle(0, 400, largura_tela, altura_tela, al_map_rgb(0, 0, 0));
+
+
+		al_flip_display();
+
+
+	}
+	al_uninstall_keyboard();	
+	al_uninstall_mouse();	
+	al_destroy_display(display);
+
+
+
+
+
+
+
+
+
+	return 0;
+}
