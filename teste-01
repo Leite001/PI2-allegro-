@@ -6,7 +6,7 @@
 #include<allegro5/keyboard.h>
 #include<allegro5/mouse.h>
 
-void movimentacao(float* xi, float* xf, int largura_tela) {
+void movimentacao(float* xi, float* xf, int largura_tela, float* yi, float* yf, float* velocidadePulo, bool* noChao) {
 	
 	al_install_keyboard();
 	ALLEGRO_KEYBOARD_STATE teclado;
@@ -14,6 +14,7 @@ void movimentacao(float* xi, float* xf, int largura_tela) {
 	
 		//variaveis
 		float velocidade = 0.03f;
+		float gravidade = 0.015f;
 		//
 	
 	// Movimentação para a esquerda
@@ -37,8 +38,61 @@ void movimentacao(float* xi, float* xf, int largura_tela) {
 		*xf = largura_tela;
 		*xi = largura_tela - 50;
 	}
+	
+	// Pulo
+	if (al_key_down(&teclado, ALLEGRO_KEY_W) && *noChao == true) {
+		*velocidadePulo = -1.8f;
+		*noChao = false;
+	}
+	
+	*velocidadePulo += gravidade;
+	//gravidade
+	*yi += *velocidadePulo;
+	*yf += *velocidadePulo;
+	
+	// Colisão com o chão
+	if (*yf >= 400) {
+		*yf = 400;
+		*yi = *yf - 80;
+		*velocidadePulo = 0.0f;
+		*noChao = true;
+	}
 }
 
+void  projetil(float *balaX, float *balaY, bool *balaAtiva, float xf, float yi, float yf, int largura_tela, bool *mouseAnterior) {
+	
+	al_install_mouse();
+	ALLEGRO_MOUSE_STATE mouse;
+	al_get_mouse_state(&mouse);
+
+	bool mouseAtual = al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT);
+	
+	float velobala = 0.05f;
+
+	// Detecta um novo clique
+	if (mouseAtual && !*mouseAnterior && !*balaAtiva) {
+		*balaX = xf;
+		*balaY = yi + (yf - yi) / 2;
+		*balaAtiva = true;
+	}
+
+	*mouseAnterior = mouseAtual;
+
+	if (*balaAtiva) {
+		*balaX += velobala;
+
+		al_draw_filled_rectangle(
+			*balaX, *balaY - 5,
+			*balaX + 20, *balaY + 5,
+			al_map_rgb(0, 255, 0)
+		);//projetil desenhado
+
+		// Desativa a bala quando sair da tela
+		if (*balaX > largura_tela) {
+			*balaAtiva = false;
+		}
+	}
+}
 
 
 
@@ -53,72 +107,41 @@ int main() {
 	int largura_tela = 860;
 	ALLEGRO_DISPLAY* display = al_create_display(largura_tela, altura_tela);
 	al_set_window_position(display, 200, 200);
-
-	float xi = 400.0f;
-	float xf = 450.0f;
-	float yi = 320.0f;
-	float yf = 400.0f;
-	float velocidade = 0.03f;
-	float velobala = 0.05f;
-	float balaX = 0.0f;
-	float balaY = 0.0f;
+		
+		//variaveis	
+		float xi = 400.0f;
+		float xf = 450.0f;
+		float yi = 320.0f;
+		float yf = 400.0f;
+		float velocidade = 0.03f;
+		float balaX = 0.0f;
+		float balaY = 0.0f;
+		float velocidadePulo = 0.0f;
+		bool noChao = true;
+		//
 
 	bool balaAtiva = false;
 
 	ALLEGRO_KEYBOARD_STATE teclado;
 	ALLEGRO_MOUSE_STATE mouse;
 	bool mouseAnterior = false;
-
+	
+	
+	//jogo rodando
 	while (true) {
 		al_get_keyboard_state(&teclado);
 		al_get_mouse_state(&mouse);
 		
 		//chamando a função
-		movimentacao(&xi, &xf, largura_tela);
+		movimentacao(&xi, &xf, largura_tela, &yi, &yf, &velocidadePulo, &noChao);
 
-
-		// movimentação para cima
-		if (al_key_down(&teclado, ALLEGRO_KEY_W)) {
-			yi -= velocidade;
-			yf -= velocidade;
-		}
-		else {
-			yi = yi;
-			yf = yf;
-		}
-
-		
 		al_clear_to_color(al_map_rgb(194, 191, 29));
 
 		al_draw_filled_rectangle(xi, yi, xf, yf, al_map_rgb(255, 0, 0));//personagem
 		al_draw_filled_rectangle(0, 400, largura_tela, altura_tela, al_map_rgb(0, 0, 0));//chao
 
-		bool mouseAtual =
-			al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT);
-
-		// Detecta um novo clique
-		if (mouseAtual && !mouseAnterior && !balaAtiva) {
-			balaX = xf;
-			balaY = yi + (yf - yi) / 2;
-			balaAtiva = true;
-		}
-
-		mouseAnterior = mouseAtual;
-
-		if (balaAtiva) {
-			balaX += velobala;
-
-			al_draw_filled_rectangle(
-				balaX, balaY - 5,
-				balaX + 20, balaY + 5,
-				al_map_rgb(0, 255, 0)
-			);//projetil desenhado
-
-			// Desativa a bala quando sair da tela
-			if (balaX > largura_tela) {
-				balaAtiva = false;
-			}
-		}
+		//função projetil float *balaX, float *balaY, bool *balaAtiva, float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *mouseAtual
+		projetil(&balaX, &balaY, &balaAtiva, xf, yi, yf, largura_tela, &mouseAnterior);
 
 		al_flip_display();
 	}
