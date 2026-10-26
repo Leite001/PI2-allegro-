@@ -1,9 +1,43 @@
+
 #include<stdio.h>
 #include<allegro5/allegro.h>
 #include<allegro5/allegro_primitives.h>
 #include<stdbool.h>
 #include<allegro5/keyboard.h>
 #include<allegro5/mouse.h>
+
+void movimentacao(float* xi, float* xf, int largura_tela) {
+	
+	al_install_keyboard();
+	ALLEGRO_KEYBOARD_STATE teclado;
+	al_get_keyboard_state(&teclado);
+	
+		//variaveis
+		float velocidade = 0.03f;
+		//
+	
+	// Movimentação para a esquerda
+	if (al_key_down(&teclado, ALLEGRO_KEY_LEFT)) {
+		*xi -= velocidade;
+		*xf -= velocidade;
+	}
+
+	// Movimentação para a direita
+	if (al_key_down(&teclado, ALLEGRO_KEY_RIGHT)) {
+		*xi += velocidade;
+		*xf += velocidade;
+	}
+	// Impede que o personagem saia da tela
+	if (*xi < 0) {
+		*xi = 0;
+		*xf = 50;
+	}
+
+	if (*xf > largura_tela) {
+		*xf = largura_tela;
+		*xi = largura_tela - 50;
+	}
+}
 
 
 
@@ -26,9 +60,8 @@ int main() {
 	float yf = 400.0f;
 	float velocidade = 0.03f;
 	float velobala = 0.05f;
-	float balaX;
-	float balaY;
-	float velobala = 5.0f;
+	float balaX = 0.0f;
+	float balaY = 0.0f;
 
 	bool balaAtiva = false;
 
@@ -38,36 +71,32 @@ int main() {
 
 	while (true) {
 		al_get_keyboard_state(&teclado);
-		al_get_mouse_state(&mouse);	
-
-		// Movimentação para a esquerda
-		if (al_key_down(&teclado, ALLEGRO_KEY_LEFT)) {
-			xi -= velocidade;
-			xf -= velocidade;
-		}
-
-		// Movimentação para a direita
-		if (al_key_down(&teclado, ALLEGRO_KEY_RIGHT)) {
-			xi += velocidade;
-			xf += velocidade;
-		}
-
-		// Impede que o personagem saia da tela
-		if (xi < 0) {
-			xi = 0;
-			xf = 50;
-		}
-
-		if (xf > largura_tela) {
-			xf = largura_tela;
-			xi = largura_tela - 50;
-		}
-
 		al_get_mouse_state(&mouse);
+		
+		//chamando a função
+		movimentacao(&xi, &xf, largura_tela);
+
+
+		// movimentação para cima
+		if (al_key_down(&teclado, ALLEGRO_KEY_W)) {
+			yi -= velocidade;
+			yf -= velocidade;
+		}
+		else {
+			yi = yi;
+			yf = yf;
+		}
+
+		
+		al_clear_to_color(al_map_rgb(194, 191, 29));
+
+		al_draw_filled_rectangle(xi, yi, xf, yf, al_map_rgb(255, 0, 0));//personagem
+		al_draw_filled_rectangle(0, 400, largura_tela, altura_tela, al_map_rgb(0, 0, 0));//chao
 
 		bool mouseAtual =
 			al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT);
 
+		// Detecta um novo clique
 		if (mouseAtual && !mouseAnterior && !balaAtiva) {
 			balaX = xf;
 			balaY = yi + (yf - yi) / 2;
@@ -80,41 +109,23 @@ int main() {
 			balaX += velobala;
 
 			al_draw_filled_rectangle(
-				balaX,
-				balaY - 5,
-				balaX + 20,
-				balaY + 5,
+				balaX, balaY - 5,
+				balaX + 20, balaY + 5,
 				al_map_rgb(0, 255, 0)
-			);
+			);//projetil desenhado
 
+			// Desativa a bala quando sair da tela
 			if (balaX > largura_tela) {
 				balaAtiva = false;
 			}
 		}
 
-
-
-		al_clear_to_color(al_map_rgb(194, 191, 29));
-
-		al_draw_filled_rectangle(xi, yi, xf, yf, al_map_rgb(255, 0, 0));
-		al_draw_filled_rectangle(0, 400, largura_tela, altura_tela, al_map_rgb(0, 0, 0));
-
-
 		al_flip_display();
-
-
 	}
-	al_uninstall_keyboard();	
-	al_uninstall_mouse();	
+
+	al_uninstall_keyboard();
+	al_uninstall_mouse();
 	al_destroy_display(display);
-
-
-
-
-
-
-
-
 
 	return 0;
 }
