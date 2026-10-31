@@ -17,7 +17,7 @@ void movimentacao(float* xi, float* xf, int largura_tela, float* yi, float* yf, 
 	float velocidade = 0.03f;
 	float gravidade = 0.015f;
 	//
-
+	
 // Movimentação para a esquerda
 	if (al_key_down(&teclado, ALLEGRO_KEY_LEFT)) {
 		*xi -= velocidade;
@@ -47,8 +47,8 @@ void movimentacao(float* xi, float* xf, int largura_tela, float* yi, float* yf, 
 		*velocidadePulo = -1.8f;
 		*noChao = false;
 	}
-
 	*velocidadePulo += gravidade;
+
 	//gravidade
 	*yi += *velocidadePulo;
 	*yf += *velocidadePulo;
@@ -113,7 +113,7 @@ void  projetil(float* balaX, float* balaY, bool* balaAtiva, float xi, float xf, 
 	}
 }
 
-	//Struct inimigo
+//Struct inimigo
 typedef struct {
 	float x;
 	float y;
@@ -124,21 +124,22 @@ typedef struct {
 	int vida;
 }inimigo;
 
-inimigo azul = {-30,370,30,0.01f,true,1,3};
-inimigo branco = {-40,370,30,0.02f,true,1,3};
-inimigo amarelo = {-50,370,30,0.03f,true,1,3};
+//inimigos
+inimigo azul = { -30,370,30,0.01f,true,1,3 };
+inimigo branco = { -40,370,30,0.005f,true,1,3 };
+inimigo amarelo = { -50,370,30,0.03f,true,1,3 };
 
-	//Perseguir o jogador
-void perseguir_jogador(inimigo* inimigo, float jogadorX){
+//Perseguir o jogador
+void perseguir_jogador(inimigo* inimigo, float jogadorX) {
 	if (!inimigo->ativo)
 		return;
 	//para a direita
-	if (inimigo->x < jogadorX){
+	if (inimigo->x < jogadorX) {
 		inimigo->x += inimigo->velocidade;
 	}
 	//para a esquerda
-	else 
-		if (inimigo->x > jogadorX){
+	else
+		if (inimigo->x > jogadorX) {
 			inimigo->x -= inimigo->velocidade;
 		}
 }
@@ -175,7 +176,7 @@ int main() {
 	ALLEGRO_MOUSE_STATE mouse;
 	bool mouseAnterior = false;
 
-//jogo rodando
+	//jogo rodando
 	while (true) {
 		al_get_keyboard_state(&teclado);
 		al_get_mouse_state(&mouse);
@@ -189,10 +190,7 @@ int main() {
 		//função projetil float *balaX, float *balaY, bool *balaAtiva, float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *mouseAtual
 		projetil(&balaX, &balaY, &balaAtiva, xi, xf, yi, yf, largura_tela, &mouseAnterior, &virou);
 
-		al_draw_filled_circle(azul.x, azul.y, azul.raio, al_map_rgb(0, 0, 255));
-
 		al_draw_filled_rectangle(0, 400, largura_tela, altura_tela, al_map_rgb(0, 0, 0));//chao
-		al_flip_display();
 
 		// Calcula o centro horizontal do jogador
 		float jogadorCentroX = (xi + xf) / 2;
@@ -217,6 +215,9 @@ int main() {
 			amarelo.x, amarelo.y, amarelo.raio,
 			al_map_rgb(255, 255, 0)
 		);
+
+		al_flip_display();
+
 	}
 
 	al_uninstall_keyboard();
