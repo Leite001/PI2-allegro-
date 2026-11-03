@@ -180,6 +180,61 @@ void colisaoBala(float* balaX,float* balaY,bool* balaAtiva,bool* balaVirou,inimi
 	}
 }
 
+void colisaoPrincipal(Personagem* p, inimigo* inimigo) {
+
+	if (!inimigo->ativo) {
+		return;
+	}
+	// Ponto mais próximo do círculo dentro do retângulo
+	float pontoX = inimigo->x;
+	float pontoY = inimigo->y;
+
+	if (pontoX < p->xi) {
+		pontoX = p->xi;
+	}
+	else if (pontoX > p->xf) {
+		pontoX = p->xf;
+	}
+	if (pontoY < p->yi) {
+		pontoY = p->yi;
+	}
+	else if (pontoY > p->yf) {
+		pontoY = p->yf;
+	}
+
+	// Distância entre o círculo e o ponto
+	float dx = inimigo->x - pontoX;
+	float dy = inimigo->y - pontoY;
+
+	float distancia = dx * dx + dy * dy;
+
+	// Colisão
+	if (distancia < inimigo->raio * inimigo->raio) {
+
+		// Empurra o inimigo para fora do personagem
+		if (inimigo->x < (p->xi + p->xf) / 2)
+			inimigo->x = p->xi - inimigo->raio;
+		else
+			inimigo->x = p->xf + inimigo->raio;
+	}
+}
+void perseguir_jogador(inimigo* inimigo, float jogadorX) {
+
+	if (!inimigo->ativo)
+		return;
+
+	// Para a direita
+	if (inimigo->x < jogadorX) {
+		inimigo->x += inimigo->velocidade;
+	}
+
+	// Para a esquerda
+	else if (inimigo->x > jogadorX) {
+		inimigo->x -= inimigo->velocidade;
+	}
+}
+
+
 int main() {
 	//inicializando allegro
 	al_init();
@@ -205,9 +260,11 @@ int main() {
 		ALLEGRO_MOUSE_STATE mouse;
 		bool mouseAnterior = false;
 		//struct inimigo
-		inimigo azul = { -30, 370,30,0.02f,true, 5, 3};
-		inimigo branco = { -40, 370,30,0.02f, true, 5, 3};
-		inimigo amarelo = { -50, 370,30,0.02f, true, 5, 3};
+		inimigo inimigo[3] = {
+			{-30, 370,30,0.02f,true, 5, 3}, // azul
+			{-40, 370,30,0.02f, true, 5, 3}, // branco
+			{-50, 370,30,0.02f, true, 5, 3}  // amarelo
+		};
 		//
 	
 	//jogo rodando
@@ -217,6 +274,21 @@ int main() {
 		
 		//chamando a função
 		movimentacao(&principal, largura_tela);
+		// Calcula o centro horizontal do jogador
+		float jogadorCentroX = (principal.xi + principal.xf) / 2;
+		// Atualiza a posição dos inimigos
+		perseguir_jogador(&inimigo[0], jogadorCentroX);
+		perseguir_jogador(&inimigo[1], jogadorCentroX);
+		perseguir_jogador(&inimigo[2], jogadorCentroX);
+
+		//colisao do personagem principal
+		colisaoPrincipal(&principal, &inimigo[0]);
+		colisaoPrincipal(&principal, &inimigo[1]);
+		colisaoPrincipal(&principal, &inimigo[2]);
+		//colisao do projetil //float* balaX,float* balaY,bool* balaAtiva,bool* balaVirou,inimigo* inimigo)
+		colisaoBala(&balaX, &balaY, &balaAtiva, &balaVirou, &inimigo[0]);
+		colisaoBala(&balaX, &balaY, &balaAtiva, &balaVirou, &inimigo[1]);
+		colisaoBala(&balaX, &balaY, &balaAtiva, &balaVirou, &inimigo[2]);
 
 		al_clear_to_color(al_map_rgb(194, 191, 29));
 
@@ -224,7 +296,19 @@ int main() {
 		//função projetil float *balaX, float *balaY, bool *balaAtiva, float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *mouseAtual
 		projetil(&balaX, &balaY, &balaAtiva, principal.xi, principal.xf, principal.yi, principal.yf, largura_tela, &mouseAnterior, &principal.virou, &balaVirou);
 		
-		al_draw_filled_circle(azul.x, azul.y, azul.raio	, al_map_rgb(0, 0, 255));
+		//inimigos
+		if (inimigo[0].vida > 0) {
+			al_draw_filled_circle(inimigo[0].x, inimigo[0].y, inimigo[0].raio, al_map_rgb(0, 0, 255));
+		}
+
+		if (inimigo[1].vida > 0) {
+			al_draw_filled_circle(inimigo[1].x, inimigo[1].y, inimigo[1].raio, al_map_rgb(255, 255, 255));
+		}
+
+		if (inimigo[2].vida > 0) {
+			al_draw_filled_circle(inimigo[2].x, inimigo[2].y, inimigo[2].raio, al_map_rgb(255, 255, 0));
+		}
+		
 		al_draw_filled_rectangle(0, 400, largura_tela, altura_tela, al_map_rgb(0, 0, 0));//chao
 		al_flip_display();
 	}
