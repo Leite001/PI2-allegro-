@@ -7,6 +7,8 @@
 #include<allegro5/timer.h>
 #include<allegro5/allegro_font.h>
 #include<allegro5/allegro_ttf.h>
+#include <stdlib.h>
+#include <time.h>
 
 typedef struct {
 	float x;
@@ -27,6 +29,7 @@ typedef struct {
 	float velocidadePulo;
 	bool noChao;
 	bool virou;
+	bool ativo;
 	int dano;
 	int vida;
 }Personagem;
@@ -43,14 +46,14 @@ void movimentacao(Personagem *p, int largura_tela) {
 		//
 	
 	// Movimentação para a esquerda
-	if (al_key_down(&teclado, ALLEGRO_KEY_LEFT)) {
+	if (al_key_down(&teclado, ALLEGRO_KEY_LEFT)&& p->ativo == true) {
 		p->xi -= p->velocidade;
 		p->xf -= p->velocidade;
 		p->virou = true;
 	}
 
 	// Movimentação para a direita
-	if (al_key_down(&teclado, ALLEGRO_KEY_RIGHT)) {
+	if (al_key_down(&teclado, ALLEGRO_KEY_RIGHT) && p->ativo == true) {
 		p->xi += p->velocidade;
 		p->xf += p->velocidade;
 		p->virou = false;
@@ -67,7 +70,7 @@ void movimentacao(Personagem *p, int largura_tela) {
 	}
 	
 	// Pulo
-	if (al_key_down(&teclado, ALLEGRO_KEY_W) && p->noChao == true) {
+	if (al_key_down(&teclado, ALLEGRO_KEY_W) && p->noChao == true && p->ativo == true)  {
 		p->velocidadePulo = -1.8f;
 		p->noChao = false;
 	}
@@ -86,7 +89,7 @@ void movimentacao(Personagem *p, int largura_tela) {
 	}
 }
 
-void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *virou, bool *balaVirou) {
+void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *virou, bool *balaVirou, bool ativoP) {
 	
 	al_install_mouse();
 	ALLEGRO_MOUSE_STATE mouse;
@@ -97,7 +100,7 @@ void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, f
 	float velobala = 0.05f;
 
 	// Detecta um novo clique
-	if (mouseAtual && !*mouseAnterior && !*balaAtiva) {
+	if (mouseAtual && !*mouseAnterior && !*balaAtiva && ativoP == true) {
 		*balaVirou = *virou;
 
 		if (*balaVirou == false) {
@@ -112,7 +115,7 @@ void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, f
 
 	*mouseAnterior = mouseAtual;
 
-	if (*balaAtiva && *balaVirou == false) {
+	if (*balaAtiva && *balaVirou == false && ativoP == true) {
 		*balaX += velobala;
 
 		al_draw_filled_rectangle(
@@ -123,7 +126,7 @@ void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, f
 	}	
 	else
 	{
-		if (*balaAtiva && *balaVirou == true) {
+		if (*balaAtiva && *balaVirou == true && ativoP == true) {
 			*balaX -= velobala;
 			al_draw_filled_rectangle(
 				*balaX, *balaY - 5,
@@ -257,7 +260,7 @@ int main() {
 	//
 	
 		//variaveis	
-		Personagem principal = {400.0f, 450.0f, 320.0f, 400.0f, 0.03f, 0.0f, true, false, 1 ,30};
+		Personagem principal = {400.0f, 450.0f, 320.0f, 400.0f, 0.03f, 0.0f, true, false, true, 1 ,30};
 		float balaX = 0.0f;
 		float balaY = 0.0f;
 		bool balaAtiva = false;
@@ -267,12 +270,27 @@ int main() {
 		bool mouseAnterior = false;
 		ALLEGRO_FONT* fonte = al_load_ttf_font("C:\\Windows\\Fonts\\arial.ttf", 24, 0);
 		
+		// variaveis Waves
+
+		
+
+		//
 		//struct inimigo
 		inimigo inimigo[3] = {
 			{-30, 370,30,0.02f,true, 5, 3}, // azul
 			{-40, 370,30,0.02f, true, 5, 3}, // branco
 			{-50, 370,30,0.02f, true, 5, 3}  // amarelo
 		};
+		//randomizar local de spawn dos inimigos
+		srand(time(NULL));
+		for (int i = 0; i < 3; i++) {
+			if (rand() % 2 == 0) {
+				inimigo[i].x = -inimigo[i].raio;
+			}
+			else {
+				inimigo[i].x = largura_tela + inimigo[i].raio;
+			}
+		}
 		//
 	
 	//jogo rodando
@@ -306,18 +324,24 @@ int main() {
 			printf("Erro ao carregar fonte\n");
 			return -1;
 		}
-
-		//
+		if (principal.vida < 0) {
+			principal.vida = 0;
+		}
+		// texto da vida do personagem
 		al_draw_textf(fonte, al_map_rgb(255, 255, 255), 10, 10, 0, "Vida: %d", principal.vida);
 
 		
-		if (principal.vida >= 0) {
+		if (principal.vida > 0) {
+			principal.ativo = true;
 			al_draw_filled_rectangle(principal.xi, principal.yi, principal.xf, principal.yf, al_map_rgb(255, 0, 0));//personagem
+
 		}
-		
+		else {
+			principal.ativo = false;
+		}
 
 		//função projetil float *balaX, float *balaY, bool *balaAtiva, float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *mouseAtual
-		projetil(&balaX, &balaY, &balaAtiva, principal.xi, principal.xf, principal.yi, principal.yf, largura_tela, &mouseAnterior, &principal.virou, &balaVirou);
+		projetil(&balaX, &balaY, &balaAtiva, principal.xi, principal.xf, principal.yi, principal.yf, largura_tela, &mouseAnterior, &principal.virou, &balaVirou, principal.ativo);
 		
 		//inimigos
 		if (inimigo[0].vida > 0) {
