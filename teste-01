@@ -7,62 +7,85 @@
 #include<allegro5/mouse.h>
 #include<allegro5/timer.h>
 
-void movimentacao(float* xi, float* xf, int largura_tela, float* yi, float* yf, float* velocidadePulo, bool* noChao, bool* virou) {
+typedef struct {
+	float x;
+	float y;
+	float raio;
+	float velocidade;
+	bool ativo;
+	int dano;
+	int vida;
+}inimigo;
+
+typedef struct {
+	float xi;
+	float xf;
+	float yi;
+	float yf;
+	float velocidade;
+	float velocidadePulo;
+	bool noChao;
+	bool virou;
+	int dano;
+	int vida;
+}Personagem;
+
+void movimentacao(Personagem *p, int largura_tela) {
 	
 	al_install_keyboard();
 	ALLEGRO_KEYBOARD_STATE teclado;
 	al_get_keyboard_state(&teclado);
 	
 		//variaveis
-		float velocidade = 0.03f;
+		p->velocidade = 0.03f;
 		float gravidade = 0.015f;
 		//
 	
 	// Movimentação para a esquerda
 	if (al_key_down(&teclado, ALLEGRO_KEY_LEFT)) {
-		*xi -= velocidade;
-		*xf -= velocidade;
-		*virou = true;
+		p->xi -= p->velocidade;
+		p->xf -= p->velocidade;
+		p->virou = true;
 	}
 
 	// Movimentação para a direita
 	if (al_key_down(&teclado, ALLEGRO_KEY_RIGHT)) {
-		*xi += velocidade;
-		*xf += velocidade;
-		*virou = false;
+		p->xi += p->velocidade;
+		p->xf += p->velocidade;
+		p->virou = false;
 	}
 	// Impede que o personagem saia da tela
-	if (*xi < 0) {
-		*xi = 0;
-		*xf = 50;
+	if (p->xi < 0) {
+		p->xi = 0;
+		p->xf = 50;
 	}
 
-	if (*xf > largura_tela) {
-		*xf = largura_tela;
-		*xi = largura_tela - 50;
+	if (p->xf > largura_tela) {
+		p->xf = largura_tela;
+		p->xi = largura_tela - 50;
 	}
 	
 	// Pulo
-	if (al_key_down(&teclado, ALLEGRO_KEY_W) && *noChao == true) {
-		*velocidadePulo = -1.8f;
-		*noChao = false;
+	if (al_key_down(&teclado, ALLEGRO_KEY_W) && p->noChao == true) {
+		p->velocidadePulo = -1.8f;
+		p->noChao = false;
 	}
 	
-	*velocidadePulo += gravidade;
+	p->velocidadePulo += gravidade;
 	//gravidade
-	*yi += *velocidadePulo;
-	*yf += *velocidadePulo;
+	p->yi += p->velocidadePulo;
+	p->yf += p->velocidadePulo;
 	
 	// Colisão com o chão
-	if (*yf >= 400) {
-		*yf = 400;
-		*yi = *yf - 80;
-		*velocidadePulo = 0.0f;
-		*noChao = true;
+	if (p->yf >= 400) {
+		p->yf = 400;
+		p->yi = p->yf - 80;
+		p->velocidadePulo = 0.0f;
+		p->noChao = true;
 	}
 }
 
-void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *virou) {
+void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *virou, bool *balaVirou) {
 	
 	al_install_mouse();
 	ALLEGRO_MOUSE_STATE mouse;
@@ -74,14 +97,21 @@ void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, f
 
 	// Detecta um novo clique
 	if (mouseAtual && !*mouseAnterior && !*balaAtiva) {
-		*balaX = xf;
+		*balaVirou = *virou;
+
+		if (*balaVirou == false) {
+			*balaX = xf;
+		}
+		else {
+			*balaX = xi;
+		}
 		*balaY = yi + (yf - yi) / 2;
 		*balaAtiva = true;
 	}
 
 	*mouseAnterior = mouseAtual;
 
-	if (*balaAtiva && *virou == false) {
+	if (*balaAtiva && *balaVirou == false) {
 		*balaX += velobala;
 
 		al_draw_filled_rectangle(
@@ -92,7 +122,7 @@ void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, f
 	}	
 	else
 	{
-		if (*balaAtiva && *virou == true) {
+		if (*balaAtiva && *balaVirou == true) {
 			*balaX -= velobala;
 			al_draw_filled_rectangle(
 				*balaX, *balaY - 5,
@@ -113,16 +143,42 @@ void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, f
 		}
 }
 
-typedef struct {
-	float x;
-	float y;
-	float raio;
-	float velocidade;
-	bool ativo;
-	int dano;
-	int vida;
-}inimigo;
+void colisaoBala(float* balaX,float* balaY,bool* balaAtiva,bool* balaVirou,inimigo* inimigo) {
+	
+	if (*balaAtiva && inimigo->ativo) {
 
+		float balaEsquerda;
+		float balaDireita;
+
+		// Define os limites horizontais da bala
+		if (*balaVirou == false) {
+			balaEsquerda = *balaX;
+			balaDireita = *balaX + 20;
+		}
+		else {
+			balaEsquerda = *balaX - 20;
+			balaDireita = *balaX;
+		}
+
+		float balaTopo = *balaY - 5;
+		float balaBaixo = *balaY + 5;
+
+		// Limites do inimigo
+		float inimigoEsquerda = inimigo->x - inimigo->raio;
+		float inimigoDireita = inimigo->x + inimigo->raio;
+
+		// Verifica colisão
+		if (balaDireita >= inimigoEsquerda && balaEsquerda <= inimigoDireita) {
+			inimigo->vida -= 1;
+			*balaAtiva = false;
+		}
+	}
+
+	// Verifica se o inimigo morreu
+	if (inimigo->vida <= 0) {
+		inimigo->ativo = false;
+	}
+}
 
 int main() {
 	//inicializando allegro
@@ -138,26 +194,20 @@ int main() {
 	ALLEGRO_DISPLAY* display = al_create_display(largura_tela, altura_tela);
 	al_set_window_position(display, 200, 200);
 	//
-		
+	
 		//variaveis	
-		float xi = 400.0f;
-		float xf = 450.0f;
-		float yi = 320.0f;
-		float yf = 400.0f;
-		float velocidade = 0.03f;
+	Personagem principal = {400.0f, 450.0f, 320.0f, 400.0f, 0.03f, 0.0f, true, false, 1 ,30};
 		float balaX = 0.0f;
 		float balaY = 0.0f;
-		float velocidadePulo = 0.0f;
-		bool noChao = true;
-		bool virou = false;
 		bool balaAtiva = false;
+		bool balaVirou = false;
 		ALLEGRO_KEYBOARD_STATE teclado;
 		ALLEGRO_MOUSE_STATE mouse;
 		bool mouseAnterior = false;
 		//struct inimigo
-		inimigo azul = { -30, 370,30,0.02f, 5, 3};
-		inimigo branco = { -40, 370,30,0.02f, 5, 3};
-		inimigo amarelo = { -50, 370,30,0.02f, 5, 3};
+		inimigo azul = { -30, 370,30,0.02f,true, 5, 3};
+		inimigo branco = { -40, 370,30,0.02f, true, 5, 3};
+		inimigo amarelo = { -50, 370,30,0.02f, true, 5, 3};
 		//
 	
 	//jogo rodando
@@ -166,16 +216,15 @@ int main() {
 		al_get_mouse_state(&mouse);
 		
 		//chamando a função
-		movimentacao(&xi, &xf, largura_tela, &yi, &yf, &velocidadePulo, &noChao, &virou);
+		movimentacao(&principal, largura_tela);
 
 		al_clear_to_color(al_map_rgb(194, 191, 29));
 
-		al_draw_filled_rectangle(xi, yi, xf, yf, al_map_rgb(255, 0, 0));//personagem
+		al_draw_filled_rectangle(principal.xi, principal.yi, principal.xf, principal.yf, al_map_rgb(255, 0, 0));//personagem
 		//função projetil float *balaX, float *balaY, bool *balaAtiva, float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *mouseAtual
-		projetil(&balaX, &balaY, &balaAtiva, xi, xf, yi, yf, largura_tela, &mouseAnterior, &virou);
+		projetil(&balaX, &balaY, &balaAtiva, principal.xi, principal.xf, principal.yi, principal.yf, largura_tela, &mouseAnterior, &principal.virou, &balaVirou);
 		
 		al_draw_filled_circle(azul.x, azul.y, azul.raio	, al_map_rgb(0, 0, 255));
-
 		al_draw_filled_rectangle(0, 400, largura_tela, altura_tela, al_map_rgb(0, 0, 0));//chao
 		al_flip_display();
 	}
