@@ -1,4 +1,3 @@
-
 #include<stdio.h>
 #include<allegro5/allegro.h>
 #include<allegro5/allegro_primitives.h>
@@ -6,6 +5,8 @@
 #include<allegro5/keyboard.h>
 #include<allegro5/mouse.h>
 #include<allegro5/timer.h>
+#include<allegro5/allegro_font.h>
+#include<allegro5/allegro_ttf.h>
 
 typedef struct {
 	float x;
@@ -210,6 +211,8 @@ void colisaoPrincipal(Personagem* p, inimigo* inimigo) {
 
 	// Colisão
 	if (distancia < inimigo->raio * inimigo->raio) {
+		//dano no personagem principal
+		p->vida -= inimigo->dano;
 
 		// Empurra o inimigo para fora do personagem
 		if (inimigo->x < (p->xi + p->xf) / 2)
@@ -218,6 +221,7 @@ void colisaoPrincipal(Personagem* p, inimigo* inimigo) {
 			inimigo->x = p->xf + inimigo->raio;
 	}
 }
+
 void perseguir_jogador(inimigo* inimigo, float jogadorX) {
 
 	if (!inimigo->ativo)
@@ -241,6 +245,8 @@ int main() {
 	al_init_primitives_addon();
 	al_install_keyboard();
 	al_install_mouse();
+	al_init_font_addon();
+	al_init_ttf_addon();
 	//
 
 	//display dimensões (tela)
@@ -251,7 +257,7 @@ int main() {
 	//
 	
 		//variaveis	
-	Personagem principal = {400.0f, 450.0f, 320.0f, 400.0f, 0.03f, 0.0f, true, false, 1 ,30};
+		Personagem principal = {400.0f, 450.0f, 320.0f, 400.0f, 0.03f, 0.0f, true, false, 1 ,30};
 		float balaX = 0.0f;
 		float balaY = 0.0f;
 		bool balaAtiva = false;
@@ -259,6 +265,8 @@ int main() {
 		ALLEGRO_KEYBOARD_STATE teclado;
 		ALLEGRO_MOUSE_STATE mouse;
 		bool mouseAnterior = false;
+		ALLEGRO_FONT* fonte = al_load_ttf_font("C:\\Windows\\Fonts\\arial.ttf", 24, 0);
+		
 		//struct inimigo
 		inimigo inimigo[3] = {
 			{-30, 370,30,0.02f,true, 5, 3}, // azul
@@ -289,10 +297,25 @@ int main() {
 		colisaoBala(&balaX, &balaY, &balaAtiva, &balaVirou, &inimigo[0]);
 		colisaoBala(&balaX, &balaY, &balaAtiva, &balaVirou, &inimigo[1]);
 		colisaoBala(&balaX, &balaY, &balaAtiva, &balaVirou, &inimigo[2]);
+		
+		
 
 		al_clear_to_color(al_map_rgb(194, 191, 29));
+		
+		if (fonte == NULL) {
+			printf("Erro ao carregar fonte\n");
+			return -1;
+		}
 
-		al_draw_filled_rectangle(principal.xi, principal.yi, principal.xf, principal.yf, al_map_rgb(255, 0, 0));//personagem
+		//
+		al_draw_textf(fonte, al_map_rgb(255, 255, 255), 10, 10, 0, "Vida: %d", principal.vida);
+
+		
+		if (principal.vida >= 0) {
+			al_draw_filled_rectangle(principal.xi, principal.yi, principal.xf, principal.yf, al_map_rgb(255, 0, 0));//personagem
+		}
+		
+
 		//função projetil float *balaX, float *balaY, bool *balaAtiva, float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *mouseAtual
 		projetil(&balaX, &balaY, &balaAtiva, principal.xi, principal.xf, principal.yi, principal.yf, largura_tela, &mouseAnterior, &principal.virou, &balaVirou);
 		
