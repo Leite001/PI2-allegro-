@@ -9,6 +9,7 @@
 #include<allegro5/allegro_ttf.h>
 #include <stdlib.h>
 #include <time.h>
+#include<allegro5/allegro_image.h>
 
 typedef struct {
 	float x;
@@ -70,7 +71,7 @@ void movimentacao(Personagem *p, int largura_tela) {
 	}
 	
 	// Pulo
-	if (al_key_down(&teclado, ALLEGRO_KEY_W) && p->noChao == true && p->ativo == true)  {
+	if (al_key_down(&teclado, ALLEGRO_KEY_UP) && p->noChao == true && p->ativo == true)  {
 		p->velocidadePulo = -1.8f;
 		p->noChao = false;
 	}
@@ -213,7 +214,13 @@ void colisaoPrincipal(Personagem* p, inimigo* inimigo) {
 	float distancia = dx * dx + dy * dy;
 
 	// Colisão
-	if (distancia < inimigo->raio * inimigo->raio) {
+	if (distancia < inimigo->raio * inimigo->raio &&
+		p->yf > inimigo->y - inimigo->raio) {
+
+		// Verifica se o personagem está pisando no inimigo
+		if (p->yf < inimigo->y) {
+			return;
+		}
 		//dano no personagem principal
 		p->vida -= inimigo->dano;
 
@@ -250,6 +257,7 @@ int main() {
 	al_install_mouse();
 	al_init_font_addon();
 	al_init_ttf_addon();
+	al_init_image_addon();
 	//
 
 	//display dimensões (tela)
@@ -260,6 +268,7 @@ int main() {
 	//
 	
 		//variaveis	
+		ALLEGRO_BITMAP* menuImg = al_load_bitmap("Imagens/MenuImagem.png");
 		Personagem principal = {400.0f, 450.0f, 320.0f, 400.0f, 0.03f, 0.0f, true, false, true, 1 ,30};
 		float balaX = 0.0f;
 		float balaY = 0.0f;
@@ -269,7 +278,8 @@ int main() {
 		ALLEGRO_MOUSE_STATE mouse;
 		bool mouseAnterior = false;
 		ALLEGRO_FONT* fonte = al_load_ttf_font("C:\\Windows\\Fonts\\arial.ttf", 24, 0);
-		
+		bool menu = true;
+		bool laboratorio = false;
 		// variaveis Waves
 
 		
@@ -292,74 +302,92 @@ int main() {
 			}
 		}
 		//
-	
+		
 	//jogo rodando
 	while (true) {
 		al_get_keyboard_state(&teclado);
 		al_get_mouse_state(&mouse);
 		
-		//chamando a função
-		movimentacao(&principal, largura_tela);
-		// Calcula o centro horizontal do jogador
-		float jogadorCentroX = (principal.xi + principal.xf) / 2;
-		// Atualiza a posição dos inimigos
-		perseguir_jogador(&inimigo[0], jogadorCentroX);
-		perseguir_jogador(&inimigo[1], jogadorCentroX);
-		perseguir_jogador(&inimigo[2], jogadorCentroX);
+		if (menu == true) {
+			al_draw_scaled_bitmap(menuImg, 0, 0, al_get_bitmap_width(menuImg), al_get_bitmap_height(menuImg), 0, 0, largura_tela, altura_tela, 0);
+			al_draw_rectangle(340, 259 , 520, 299, al_map_rgb(255, 0, 0), 5);
+			al_draw_rectangle(340, 365 , 520, 420, al_map_rgb(255, 0, 0), 5);
+			if(al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT) && mouse.x >= 340 && mouse.x <= 520 && mouse.y >= 259 && mouse.y <= 299) {
+				menu = false;
+				laboratorio = false;
+			}	
+			else if (al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT) && mouse.x >= 340 && mouse.x <= 520 && mouse.y >= 365 && mouse.y <= 420) {
+				laboratorio = true;
 
-		//colisao do personagem principal
-		colisaoPrincipal(&principal, &inimigo[0]);
-		colisaoPrincipal(&principal, &inimigo[1]);
-		colisaoPrincipal(&principal, &inimigo[2]);
-		//colisao do projetil //float* balaX,float* balaY,bool* balaAtiva,bool* balaVirou,inimigo* inimigo)
-		colisaoBala(&balaX, &balaY, &balaAtiva, &balaVirou, &inimigo[0]);
-		colisaoBala(&balaX, &balaY, &balaAtiva, &balaVirou, &inimigo[1]);
-		colisaoBala(&balaX, &balaY, &balaAtiva, &balaVirou, &inimigo[2]);
-		
-		
 
-		al_clear_to_color(al_map_rgb(194, 191, 29));
-		
-		if (fonte == NULL) {
-			printf("Erro ao carregar fonte\n");
-			return -1;
+			}
 		}
-		if (principal.vida < 0) {
-			principal.vida = 0;
-		}
-		// texto da vida do personagem
-		al_draw_textf(fonte, al_map_rgb(255, 255, 255), 10, 10, 0, "Vida: %d", principal.vida);
+		else if (menu == false) {
+			//chamando a função
+			movimentacao(&principal, largura_tela);
+			// Calcula o centro horizontal do jogador
+			float jogadorCentroX = (principal.xi + principal.xf) / 2;
+			// Atualiza a posição dos inimigos
+			perseguir_jogador(&inimigo[0], jogadorCentroX);
+			perseguir_jogador(&inimigo[1], jogadorCentroX);
+			perseguir_jogador(&inimigo[2], jogadorCentroX);
 
-		
-		if (principal.vida > 0) {
-			principal.ativo = true;
-			al_draw_filled_rectangle(principal.xi, principal.yi, principal.xf, principal.yf, al_map_rgb(255, 0, 0));//personagem
+			//colisao do personagem principal
+			colisaoPrincipal(&principal, &inimigo[0]);
+			colisaoPrincipal(&principal, &inimigo[1]);
+			colisaoPrincipal(&principal, &inimigo[2]);
+			//colisao do projetil //float* balaX,float* balaY,bool* balaAtiva,bool* balaVirou,inimigo* inimigo)
+			colisaoBala(&balaX, &balaY, &balaAtiva, &balaVirou, &inimigo[0]);
+			colisaoBala(&balaX, &balaY, &balaAtiva, &balaVirou, &inimigo[1]);
+			colisaoBala(&balaX, &balaY, &balaAtiva, &balaVirou, &inimigo[2]);
 
-		}
-		else {
-			principal.ativo = false;
-		}
 
-		//função projetil float *balaX, float *balaY, bool *balaAtiva, float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *mouseAtual
-		projetil(&balaX, &balaY, &balaAtiva, principal.xi, principal.xf, principal.yi, principal.yf, largura_tela, &mouseAnterior, &principal.virou, &balaVirou, principal.ativo);
-		
-		//inimigos
-		if (inimigo[0].vida > 0) {
-			al_draw_filled_circle(inimigo[0].x, inimigo[0].y, inimigo[0].raio, al_map_rgb(0, 0, 255));
-		}
 
-		if (inimigo[1].vida > 0) {
-			al_draw_filled_circle(inimigo[1].x, inimigo[1].y, inimigo[1].raio, al_map_rgb(255, 255, 255));
-		}
+			al_clear_to_color(al_map_rgb(194, 191, 29));
 
-		if (inimigo[2].vida > 0) {
-			al_draw_filled_circle(inimigo[2].x, inimigo[2].y, inimigo[2].raio, al_map_rgb(255, 255, 0));
+			if (fonte == NULL) {
+				printf("Erro ao carregar fonte\n");
+				return -1;
+			}
+			if (principal.vida < 0) {
+				principal.vida = 0;
+			}
+			// texto da vida do personagem
+			al_draw_textf(fonte, al_map_rgb(255, 255, 255), 10, 10, 0, "Vida: %d", principal.vida);
+
+
+			if (principal.vida > 0) {
+				principal.ativo = true;
+				al_draw_filled_rectangle(principal.xi, principal.yi, principal.xf, principal.yf, al_map_rgb(255, 0, 0));//personagem
+
+			}
+			else {
+				principal.ativo = false;
+			}
+
+			//função projetil float *balaX, float *balaY, bool *balaAtiva, float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *mouseAtual
+			projetil(&balaX, &balaY, &balaAtiva, principal.xi, principal.xf, principal.yi, principal.yf, largura_tela, &mouseAnterior, &principal.virou, &balaVirou, principal.ativo);
+
+			//inimigos
+			if (inimigo[0].vida > 0) {
+				al_draw_filled_circle(inimigo[0].x, inimigo[0].y, inimigo[0].raio, al_map_rgb(0, 0, 255));
+			}
+
+			if (inimigo[1].vida > 0) {
+				al_draw_filled_circle(inimigo[1].x, inimigo[1].y, inimigo[1].raio, al_map_rgb(255, 255, 255));
+			}
+
+			if (inimigo[2].vida > 0) {
+				al_draw_filled_circle(inimigo[2].x, inimigo[2].y, inimigo[2].raio, al_map_rgb(255, 255, 0));
+			}
+
+			al_draw_filled_rectangle(0, 400, largura_tela, altura_tela, al_map_rgb(0, 0, 0));//chao
+			
 		}
-		
-		al_draw_filled_rectangle(0, 400, largura_tela, altura_tela, al_map_rgb(0, 0, 0));//chao
 		al_flip_display();
 	}
 
+	al_destroy_bitmap(menuImg);
 	al_uninstall_keyboard();
 	al_uninstall_mouse();
 	al_destroy_display(display);
