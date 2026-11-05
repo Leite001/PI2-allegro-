@@ -10,6 +10,8 @@ Entretanto, o acidente desperta uma habilidade extraordinária: absorver element
 
 Agora, para recuperar sua aparência humana, será necessário sobreviver a hordas de inimigos, explorar ambientes perigosos e descobrir novas combinações químicas.
 
+[![ELEM.png](https://i.postimg.cc/zGDFXFC0/ELEM.png)](https://postimg.cc/YhVWdgyW)
+
 ## 📖 História
 
 Um experimento químico dá errado e provoca uma reação inesperada, transformando o protagonista em um esqueleto.
@@ -29,7 +31,6 @@ Entre os principais conceitos de gameplay estão:
 - **Sistema de Waves:** sobreviva a ondas progressivamente mais desafiadoras de inimigos.
 - **Absorção de elementos:** descubra e utilize elementos da Tabela Periódica.
 - **Poderes químicos:** cada elemento possui propriedades que influenciam as habilidades do personagem.
-- **Progressão:** fique cada vez mais forte conforme avança pelas waves.
 - **Exploração:** descubra ambientes, enfrente desafios e encontre novos elementos.
 
 ## 🧪 Laboratório de Combinações
