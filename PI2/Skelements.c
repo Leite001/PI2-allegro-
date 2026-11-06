@@ -303,7 +303,7 @@ int main() {
 	}
 	//
 
-//jogo rodando
+
 	while (true) {
 		al_get_keyboard_state(&teclado);
 		al_get_mouse_state(&mouse);

@@ -1,0 +1,11 @@
+PI2/packages/Allegro.5.2.11.3/Allegro.5.2.11.3.nupkg
+# Visual Studio
+.vs/
+**/.vs/
+
+# VS Code
+.vscode/
+
+# Arquivos temporários de IDE
+*.suo
+*.user

@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Skelements.cpp">
+    <ClCompile Include="Skelements.c">
       <Filter>Arquivos de Origem</Filter>
     </ClCompile>
   </ItemGroup>
