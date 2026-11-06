@@ -68,3 +68,7 @@ Mais do que sobreviver, o objetivo é descobrir até onde a química pode levar 
 ---
 
 **🧪 Elements — A química nunca foi tão facil.**
+
+
+## 🎯 Trello do jogo
+-  [Trello Skelements](https://trello.com/b/A9qUtnpD/pi2)  -
