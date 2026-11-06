@@ -9,3 +9,9 @@ PI2/packages/Allegro.5.2.11.3/Allegro.5.2.11.3.nupkg
 # Arquivos temporários de IDE
 *.suo
 *.user
+*.db
+*.db-shm
+*.db-wal
+*.db
+*.db-wal
+*.opendb
