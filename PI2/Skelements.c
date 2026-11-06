@@ -249,6 +249,7 @@ void perseguir_jogador(inimigo* inimigo, float jogadorX) {
 }
 
 
+
 int main() {
 	//inicializando allegro
 	al_init();
@@ -280,6 +281,7 @@ int main() {
 	ALLEGRO_FONT* fonte = al_load_ttf_font("C:\\Windows\\Fonts\\arial.ttf", 24, 0);
 	bool menu = true;
 	bool laboratorio = false;
+	bool jogo = false;
 	// variaveis Waves
 
 
@@ -303,26 +305,29 @@ int main() {
 	}
 	//
 
-
+//jogo rodando
 	while (true) {
 		al_get_keyboard_state(&teclado);
 		al_get_mouse_state(&mouse);
 
-		if (menu == true) {
+		if (menu == true && jogo == false && laboratorio == false) // menu
+		{
 			al_draw_scaled_bitmap(menuImg, 0, 0, al_get_bitmap_width(menuImg), al_get_bitmap_height(menuImg), 0, 0, largura_tela, altura_tela, 0);
 			al_draw_rectangle(340, 259, 520, 299, al_map_rgb(255, 0, 0), 5);
 			al_draw_rectangle(340, 365, 520, 420, al_map_rgb(255, 0, 0), 5);
 			if (al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT) && mouse.x >= 340 && mouse.x <= 520 && mouse.y >= 259 && mouse.y <= 299) {
 				menu = false;
 				laboratorio = false;
+				jogo = true;
 			}
 			else if (al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT) && mouse.x >= 340 && mouse.x <= 520 && mouse.y >= 365 && mouse.y <= 420) {
 				laboratorio = true;
-
-
+				menu = false;
+				jogo = false;
 			}
 		}
-		else if (menu == false) {
+		else if (menu == false && jogo == true && laboratorio == false) //jogo principal
+		{
 			//chamando a função
 			movimentacao(&principal, largura_tela);
 			// Calcula o centro horizontal do jogador
@@ -384,6 +389,33 @@ int main() {
 			al_draw_filled_rectangle(0, 400, largura_tela, altura_tela, al_map_rgb(0, 0, 0));//chao
 
 		}
+		else if (menu == false && jogo == false && laboratorio == true) // laboratorio
+		{
+			//funções / variaveis
+
+
+			if (al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT) && mouse.x >= 10 && mouse.x <= 150 && mouse.y >= 10 && mouse.y <= 40) {
+				menu = true;
+				laboratorio = false;
+				jogo = false;
+			}
+
+			//
+			al_clear_to_color(al_map_rgb(255, 255, 255));
+			// desenhos do laboratorio após essa linha
+
+
+			al_draw_rectangle(10, 10, 150, 40, al_map_rgb(0, 0, 0), 2);
+			al_draw_textf(fonte, al_map_rgb(0, 0, 0), 10, 10, 0, "Voltar <--");
+			al_draw_textf(fonte, al_map_rgb(0, 0, 0), largura_tela / 2, 10, 0, "LABORATÓRIO");
+
+			al_draw_line(0, 50, largura_tela, 50, al_map_rgb(0, 0, 0), 2);
+			al_draw_line(80, 50, 80, altura_tela, al_map_rgb(0, 0, 0), 2);
+
+		}
+
+
+
 		al_flip_display();
 	}
 
