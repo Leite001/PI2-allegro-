@@ -35,19 +35,19 @@ typedef struct {
 	int vida;
 }Personagem;
 
-void movimentacao(Personagem *p, int largura_tela) {
-	
+void movimentacao(Personagem* p, int largura_tela) {
+
 	al_install_keyboard();
 	ALLEGRO_KEYBOARD_STATE teclado;
 	al_get_keyboard_state(&teclado);
-	
-		//variaveis
-		p->velocidade = 0.03f;
-		float gravidade = 0.015f;
-		//
-	
-	// Movimentação para a esquerda
-	if (al_key_down(&teclado, ALLEGRO_KEY_LEFT)&& p->ativo == true) {
+
+	//variaveis
+	p->velocidade = 0.03f;
+	float gravidade = 0.015f;
+	//
+
+// Movimentação para a esquerda
+	if (al_key_down(&teclado, ALLEGRO_KEY_LEFT) && p->ativo == true) {
 		p->xi -= p->velocidade;
 		p->xf -= p->velocidade;
 		p->virou = true;
@@ -69,18 +69,18 @@ void movimentacao(Personagem *p, int largura_tela) {
 		p->xf = largura_tela;
 		p->xi = largura_tela - 50;
 	}
-	
+
 	// Pulo
-	if (al_key_down(&teclado, ALLEGRO_KEY_UP) && p->noChao == true && p->ativo == true)  {
+	if (al_key_down(&teclado, ALLEGRO_KEY_UP) && p->noChao == true && p->ativo == true) {
 		p->velocidadePulo = -1.8f;
 		p->noChao = false;
 	}
-	
+
 	p->velocidadePulo += gravidade;
 	//gravidade
 	p->yi += p->velocidadePulo;
 	p->yf += p->velocidadePulo;
-	
+
 	// Colisão com o chão
 	if (p->yf >= 400) {
 		p->yf = 400;
@@ -90,14 +90,14 @@ void movimentacao(Personagem *p, int largura_tela) {
 	}
 }
 
-void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, float yi, float yf, int largura_tela, bool *mouseAnterior, bool *virou, bool *balaVirou, bool ativoP) {
-	
+void  projetil(float* balaX, float* balaY, bool* balaAtiva, float xi, float xf, float yi, float yf, int largura_tela, bool* mouseAnterior, bool* virou, bool* balaVirou, bool ativoP) {
+
 	al_install_mouse();
 	ALLEGRO_MOUSE_STATE mouse;
 	al_get_mouse_state(&mouse);
 
 	bool mouseAtual = al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT);
-	
+
 	float velobala = 0.05f;
 
 	// Detecta um novo clique
@@ -124,7 +124,7 @@ void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, f
 			*balaX + 20, *balaY + 5,
 			al_map_rgb(0, 255, 0)
 		);//projetil desenhado direita
-	}	
+	}
 	else
 	{
 		if (*balaAtiva && *balaVirou == true && ativoP == true) {
@@ -137,19 +137,19 @@ void  projetil(float *balaX, float *balaY, bool *balaAtiva,float xi ,float xf, f
 		}
 	}
 
-		// Desativa a bala quando sair da tela
-		if (*balaX > largura_tela) {
+	// Desativa a bala quando sair da tela
+	if (*balaX > largura_tela) {
+		*balaAtiva = false;
+	}
+	else {
+		if (*balaX < 0) {
 			*balaAtiva = false;
 		}
-		else {
-			if (*balaX < 0) {
-				*balaAtiva = false;
-			}
-		}
+	}
 }
 
-void colisaoBala(float* balaX,float* balaY,bool* balaAtiva,bool* balaVirou,inimigo* inimigo) {
-	
+void colisaoBala(float* balaX, float* balaY, bool* balaAtiva, bool* balaVirou, inimigo* inimigo) {
+
 	if (*balaAtiva && inimigo->ativo) {
 
 		float balaEsquerda;
@@ -249,6 +249,7 @@ void perseguir_jogador(inimigo* inimigo, float jogadorX) {
 }
 
 
+
 int main() {
 	//inicializando allegro
 	al_init();
@@ -266,63 +267,67 @@ int main() {
 	ALLEGRO_DISPLAY* display = al_create_display(largura_tela, altura_tela);
 	al_set_window_position(display, 200, 200);
 	//
-	
+
 		//variaveis	
-		ALLEGRO_BITMAP* menuImg = al_load_bitmap("Imagens/MenuImagem.png");
-		Personagem principal = {400.0f, 450.0f, 320.0f, 400.0f, 0.03f, 0.0f, true, false, true, 1 ,30};
-		float balaX = 0.0f;
-		float balaY = 0.0f;
-		bool balaAtiva = false;
-		bool balaVirou = false;
-		ALLEGRO_KEYBOARD_STATE teclado;
-		ALLEGRO_MOUSE_STATE mouse;
-		bool mouseAnterior = false;
-		ALLEGRO_FONT* fonte = al_load_ttf_font("C:\\Windows\\Fonts\\arial.ttf", 24, 0);
-		bool menu = true;
-		bool laboratorio = false;
-		// variaveis Waves
+	ALLEGRO_BITMAP* menuImg = al_load_bitmap("Imagens/MenuImagem.png");
+	Personagem principal = { 400.0f, 450.0f, 320.0f, 400.0f, 0.03f, 0.0f, true, false, true, 1 ,30 };
+	float balaX = 0.0f;
+	float balaY = 0.0f;
+	bool balaAtiva = false;
+	bool balaVirou = false;
+	ALLEGRO_KEYBOARD_STATE teclado;
+	ALLEGRO_MOUSE_STATE mouse;
+	bool mouseAnterior = false;
+	ALLEGRO_FONT* fonte = al_load_ttf_font("C:\\Windows\\Fonts\\arial.ttf", 24, 0);
+	bool menu = true;
+	bool laboratorio = false;
+	bool jogo = false;
+	// variaveis Waves
 
-		
 
-		//
-		//struct inimigo
-		inimigo inimigo[3] = {
-			{-30, 370,30,0.02f,true, 5, 3}, // azul
-			{-40, 370,30,0.02f, true, 5, 3}, // branco
-			{-50, 370,30,0.02f, true, 5, 3}  // amarelo
-		};
-		//randomizar local de spawn dos inimigos
-		srand(time(NULL));
-		for (int i = 0; i < 3; i++) {
-			if (rand() % 2 == 0) {
-				inimigo[i].x = -inimigo[i].raio;
-			}
-			else {
-				inimigo[i].x = largura_tela + inimigo[i].raio;
-			}
+
+	//
+	//struct inimigo
+	inimigo inimigo[3] = {
+		{-30, 370,30,0.02f,true, 5, 3}, // azul
+		{-40, 370,30,0.02f, true, 5, 3}, // branco
+		{-50, 370,30,0.02f, true, 5, 3}  // amarelo
+	};
+	//randomizar local de spawn dos inimigos
+	srand(time(NULL));
+	for (int i = 0; i < 3; i++) {
+		if (rand() % 2 == 0) {
+			inimigo[i].x = -inimigo[i].raio;
 		}
-		//
-		
-	//jogo rodando
+		else {
+			inimigo[i].x = largura_tela + inimigo[i].raio;
+		}
+	}
+	//
+
+//jogo rodando
 	while (true) {
 		al_get_keyboard_state(&teclado);
 		al_get_mouse_state(&mouse);
-		
-		if (menu == true) {
+
+		if (menu == true && jogo == false && laboratorio == false) // menu
+		{
 			al_draw_scaled_bitmap(menuImg, 0, 0, al_get_bitmap_width(menuImg), al_get_bitmap_height(menuImg), 0, 0, largura_tela, altura_tela, 0);
-			al_draw_rectangle(340, 259 , 520, 299, al_map_rgb(255, 0, 0), 5);
-			al_draw_rectangle(340, 365 , 520, 420, al_map_rgb(255, 0, 0), 5);
-			if(al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT) && mouse.x >= 340 && mouse.x <= 520 && mouse.y >= 259 && mouse.y <= 299) {
+			al_draw_rectangle(340, 259, 520, 299, al_map_rgb(255, 0, 0), 5);
+			al_draw_rectangle(340, 365, 520, 420, al_map_rgb(255, 0, 0), 5);
+			if (al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT) && mouse.x >= 340 && mouse.x <= 520 && mouse.y >= 259 && mouse.y <= 299) {
 				menu = false;
 				laboratorio = false;
-			}	
+				jogo = true;
+			}
 			else if (al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT) && mouse.x >= 340 && mouse.x <= 520 && mouse.y >= 365 && mouse.y <= 420) {
 				laboratorio = true;
-
-
+				menu = false;
+				jogo = false;
 			}
 		}
-		else if (menu == false) {
+		else if (menu == false && jogo == true && laboratorio == false) //jogo principal
+		{
 			//chamando a função
 			movimentacao(&principal, largura_tela);
 			// Calcula o centro horizontal do jogador
@@ -382,8 +387,35 @@ int main() {
 			}
 
 			al_draw_filled_rectangle(0, 400, largura_tela, altura_tela, al_map_rgb(0, 0, 0));//chao
-			
+
 		}
+		else if (menu == false && jogo == false && laboratorio == true) // laboratorio
+		{
+			//funções / variaveis
+
+
+			if(al_mouse_button_down(&mouse, ALLEGRO_MOUSE_BUTTON_LEFT) && mouse.x >= 10 && mouse.x <= 150 && mouse.y >= 10 && mouse.y <= 40){
+				menu = true;
+				laboratorio = false;
+				jogo = false;
+			}
+
+			//
+			al_clear_to_color(al_map_rgb(255, 255, 255));
+			// desenhos do laboratorio após essa linha
+
+
+			al_draw_rectangle(10, 10, 150, 40, al_map_rgb(0, 0, 0), 2);
+			al_draw_textf(fonte, al_map_rgb(0, 0, 0), 10, 10, 0, "Voltar <--");
+			al_draw_textf(fonte, al_map_rgb(0, 0, 0), largura_tela/2, 10, 0, "LABORATÓRIO");
+
+			al_draw_line(0, 50, largura_tela, 50, al_map_rgb(0, 0, 0), 2);
+			al_draw_line(80, 50, 80, altura_tela, al_map_rgb(0, 0, 0), 2);
+
+		}
+
+
+
 		al_flip_display();
 	}
 
